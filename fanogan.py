@@ -27,7 +27,7 @@ DIM = 64  # This overfits substantially; you're probably better off with 64
 LAMBDA = 10  # Gradient penalty lambda hyperparameter
 CRITIC_ITERS = 5  # How many critic iterations per generator iteration
 BATCH_SIZE = 64  # Batch size
-ITERS = 200000  # How many generator iterations to train for
+ITERS = 100000  # How many generator iterations to train for
 OUTPUT_DIM = 3 * 64 * 64  # Number of pixels in image (3*64*64)
 NOISE_SIZE = 128
 torch.manual_seed(0)
@@ -100,7 +100,7 @@ def wgan_training():
     D_fake_list = []
     D_cost_list = []
     G_cost_list = []
-    for iteration in range(ITERS):
+    for iteration in range(1, ITERS + 1):
         start_time = time.time()
         ############################
         # (1) Update D network
@@ -176,10 +176,10 @@ def wgan_training():
 
 def train_encoder():
     netG = GoodGenerator().to(device)
-    netG.load_state_dict(torch.load('wgangp/netG_16000.pth'))
+    netG.load_state_dict(torch.load('wgangp/netG_100000.pth'))
     netG.eval()
     netD = GoodDiscriminator().to(device)
-    netD.load_state_dict(torch.load('wgangp/netD_16000.pth'))
+    netD.load_state_dict(torch.load('wgangp/netD_100000.pth'))
     netD.eval()
     for p in netD.parameters():
         p.requires_grad = False
@@ -214,15 +214,15 @@ def train_encoder():
         rec_image = netG(netE(x))
         d_input = torch.cat((x, rec_image), dim=0)
         save_image(d_input*0.5+0.5, 'rec'+str(e)+'.bmp')
-    torch.save(netE.state_dict(), 'wgangp/netE_2.pth')
+    torch.save(netE.state_dict(), 'wgangp/netE.pth')
 
 
 def evaluate():
     netG = GoodGenerator().to(device)
-    netG.load_state_dict(torch.load('wgangp/netG_16000.pth'))
+    netG.load_state_dict(torch.load('wgangp/netG_100000.pth'))
     netG.eval()
     netD = GoodDiscriminator().to(device)
-    netD.load_state_dict(torch.load('wgangp/netD_16000.pth'))
+    netD.load_state_dict(torch.load('wgangp/netD_100000.pth'))
     netD.eval()
     netE = Encoder(DIM, NOISE_SIZE).to(device)
     netE.load_state_dict(torch.load('wgangp/netE.pth'))
@@ -273,7 +273,7 @@ def evaluate():
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--alpha', dest='alpha', type=float, default=1)
-    parser.add_argument('--stage', dest='stage', type=int, required=True)
+    parser.add_argument('--stage', dest='stage', type=int, default=1)
     parser.add_argument('--eval', dest='eval', action='store_true')
     parser.add_argument('--class', dest='c', type=int, required=True)
     parser.add_argument('--cuda', dest='cuda', type=str, defalt='0')
