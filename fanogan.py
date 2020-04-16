@@ -61,7 +61,7 @@ def calc_gradient_penalty(netD, real_data, fake_data):
     return gradient_penalty
 
 
-def one_class_dataloader(c, nw, bs):
+def one_class_dataloader(c, nw=0, bs=64):
     transform = transforms.Compose([
         # transforms.RandomCrop(32, padding=4),
         # transforms.RandomHorizontalFlip(),
@@ -75,16 +75,14 @@ def one_class_dataloader(c, nw, bs):
     labels = np.array(cifar.targets)
     class_indices = np.argwhere(labels == c)
     class_indices = class_indices.reshape(class_indices.shape[0])
-    # indices = np.arange(0, len(labels))
-    # indices = np.setdiff1d(indices, class_indices)
     trainloader = DataLoader(
         cifar, bs, sampler=sampler.SubsetRandomSampler(class_indices),
         num_workers=nw, pin_memory=True, drop_last=True)
-    val = datasets.CIFAR10('./', download=False,
+    test = datasets.CIFAR10('./', download=False,
                            train=False, transform=transform)
-    valloader = DataLoader(val, bs*2, num_workers=nw, pin_memory=True)
+    testloader = DataLoader(val, bs*2, num_workers=nw, pin_memory=True)
 
-    return trainloader, valloader
+    return trainloader, testloader
 
 
 def wgan_training():
@@ -191,7 +189,7 @@ def train_encoder():
     dataloader, _ = one_class_dataloader(options.c, 2, BATCH_SIZE)
 
     netE = Encoder(DIM, NOISE_SIZE).to(device)
-    netE.load_state_dict(torch.load('wgangp/netE.pth'))
+    # netE.load_state_dict(torch.load('wgangp/netE.pth'))
 
     optimizer = optim.Adam(netE.parameters(), 1e-4, (0.0, 0.9))
 
@@ -206,7 +204,7 @@ def train_encoder():
             rec_image = netG(code)
             d_input = torch.cat((x, rec_image), dim=0)
             f_x, f_gx = netD.extract_feature(d_input).chunk(2, 0)
-            loss = crit(rec_image, x) + crit(f_gx, f_x.detach())
+            loss = crit(rec_image, x) + options.alpha * crit(f_gx, f_x.detach())
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -247,12 +245,11 @@ def evaluate():
             out_real.append(x[idx])
             out_rec.append(rec_image[idx])
             f_x, f_gx = netD.extract_feature(d_input).chunk(2, 0)
-            a, b = 1, 1
             rec_diff = ((rec_image.view(bs, -1) - x.view(bs, -1))**2)
             rec_score = rec_diff.mean(dim=1) - rec_diff.std(dim=1)
             feat_diff = ((f_x - f_gx)**2)
             feat_score = feat_diff.mean(dim=1) + feat_diff.std(dim=1)
-            outlier_score = a * rec_score + b * feat_score
+            outlier_score = rec_score + options.alpha * feat_score
             y_true.append(label)
             y_score.append(outlier_score.cpu())
     in_real = torch.cat(in_real, dim=0)[:32]
@@ -275,21 +272,19 @@ def evaluate():
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    '''alpha: scales the lr of Discriminator'''
-    '''beta: controls the trade-off between rec loss and prior loss'''
-    '''gamma: controls the trade-off between rec loss and gen loss'''
-    parser.add_argument('--alpha', dest='a', type=float, default=0.1)
-    parser.add_argument('--beta', dest='b', type=float, default=5)
-    parser.add_argument('--gamma', dest='g', type=float, default=15)
+    parser.add_argument('--alpha', dest='a', type=float, default=1)
+    parser.add_argument('--stage', dest='stage', type=int, required=True)
     parser.add_argument('--eval', dest='eval', action='store_true')
     parser.add_argument('--class', dest='c', type=int, required=True)
-    parser.add_argument('--cuda', dest='cuda', type=str, required=True)
+    parser.add_argument('--cuda', dest='cuda', type=str, defalt='0')
     global options
     options = parser.parse_args()
     device = torch.device('cuda:{}'.format(options.cuda))
     torch.cuda.set_device('cuda:{}'.format(options.cuda))
     if not options.eval:
-        # wgan_training()
-        train_encoder()
+        if options.stage == 1:
+            wgan_training()
+        elif options.stage == 2:
+            train_encoder()
     else:
         evaluate()
