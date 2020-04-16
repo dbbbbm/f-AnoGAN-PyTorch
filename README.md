@@ -14,12 +14,12 @@ This implementation performs anomaly detection on CIFAR-10. In the common settin
 ## Usage
 - Train a GAN
 
-        python fanogan.py --stage 1 --class CLASS
+        python fanogan.py --stage 1 --class NORMALCLASS
 
 - Train an encoder
 
-        python fanogan.py --stage 2 --class CLASS
+        python fanogan.py --stage 2 --class NORMALCLASS
 
 - Evaluate AUROC
 
-        python fanogan.py --eval --class CLASS
+        python fanogan.py --eval --class NORMALCLASS
