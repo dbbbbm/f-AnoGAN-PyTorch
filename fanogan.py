@@ -272,7 +272,7 @@ def evaluate():
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--alpha', dest='a', type=float, default=1)
+    parser.add_argument('--alpha', dest='alpha', type=float, default=1)
     parser.add_argument('--stage', dest='stage', type=int, required=True)
     parser.add_argument('--eval', dest='eval', action='store_true')
     parser.add_argument('--class', dest='c', type=int, required=True)
