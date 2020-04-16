@@ -9,4 +9,17 @@ https://www.sciencedirect.com/science/article/abs/pii/S1361841518302640
 - **WGAN-GP-PyTorch**: https://github.com/jalola/improved-wgan-pytorch
 
 ## Dataset
-This implementation 
+This implementation performs anomaly detection on CIFAR-10. In the common setting we treat one class of CIFAR-10 as normal class and other 9 classes as anomalies. You can specify which class is considered as normal when running fanogan.py in command line by setting the --class argument.
+
+## Usage
+1. Train a GAN
+
+  python fanogan.py --stage 1 --class CLASS
+
+2. Train an encoder
+
+  python fanogan.py --stage 2 --class CLASS
+
+3. Evaluate AUROC
+
+  python fanogan.py --eval --class CLASS
