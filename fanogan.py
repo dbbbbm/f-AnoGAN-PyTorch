@@ -80,7 +80,7 @@ def one_class_dataloader(c, nw=0, bs=64):
         num_workers=nw, pin_memory=True, drop_last=True)
     test = datasets.CIFAR10('./', download=False,
                            train=False, transform=transform)
-    testloader = DataLoader(val, bs*2, num_workers=nw, pin_memory=True)
+    testloader = DataLoader(test, bs*2, num_workers=nw, pin_memory=True)
 
     return trainloader, testloader
 
@@ -276,7 +276,7 @@ if __name__ == '__main__':
     parser.add_argument('--stage', dest='stage', type=int, default=1)
     parser.add_argument('--eval', dest='eval', action='store_true')
     parser.add_argument('--class', dest='c', type=int, required=True)
-    parser.add_argument('--cuda', dest='cuda', type=str, defalt='0')
+    parser.add_argument('--cuda', dest='cuda', type=str, default='0')
     global options
     options = parser.parse_args()
     device = torch.device('cuda:{}'.format(options.cuda))
