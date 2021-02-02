@@ -246,9 +246,9 @@ def evaluate():
             out_rec.append(rec_image[idx])
             f_x, f_gx = netD.extract_feature(d_input).chunk(2, 0)
             rec_diff = ((rec_image.view(bs, -1) - x.view(bs, -1))**2)
-            rec_score = rec_diff.mean(dim=1) # - rec_diff.std(dim=1)
+            rec_score = rec_diff.mean(dim=1)
             feat_diff = ((f_x - f_gx)**2)
-            feat_score = feat_diff.mean(dim=1) # + feat_diff.std(dim=1)
+            feat_score = feat_diff.mean(dim=1)
             outlier_score = rec_score + options.alpha * feat_score
             y_true.append(label)
             y_score.append(outlier_score.cpu())
